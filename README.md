@@ -36,7 +36,15 @@ A minimal example of running Stata from a Jupyter notebook on [Google Colab](htt
    regress price mpg weight
    ```
 
-The edition (`EDITION = "se"`) and Docker image (`IMAGE`) can be changed in the first code cell. An MP license can also run SE. To skip the prompt (e.g., in automated runs), set the environment variable `STATA_LIC_BASE64`.
+The Stata version (`VERSION = "19_5"`), Docker tag (`TAG = "2026-08-12"`), and edition (`EDITION = "se"`) can be changed in the first code cell. Use the version spelling from the Docker image name (`19_5` means Stata 19.5). Set `TAG = "latest"` to query the Docker Hub API for the most recently updated non-`latest` tag: these images intentionally have no literal `latest` tag. You can also override the complete Docker image (`IMAGE`). An MP license can also run SE. To skip the prompt (e.g., in automated runs), set the environment variable `STATA_LIC_BASE64`.
+
+The same settings are available through the Python helper:
+
+```python
+setup_stata.install_stata(version="19_5", tag="latest", edition="se")
+```
+
+An explicit `image=` overrides the version, tag, and edition used to select the image.
 
 ## Outside of Colab
 
@@ -44,7 +52,8 @@ The helper also works on any x86-64 Linux machine:
 
 ```bash
 sudo python3 setup_stata.py            # installs to /usr/local/stata, then prompts for the license
-python3 setup_stata.py --help          # options: --image, --edition, --stata-dir, --root, --force, --skip-license
+sudo python3 setup_stata.py --version 19_5 --tag latest --edition se
+python3 setup_stata.py --help          # options: --version, --tag, --image, --edition, --stata-dir, --root, --force, --skip-license
 ```
 
 ## License
