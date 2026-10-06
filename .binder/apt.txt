@@ -1,0 +1,6 @@
+libncurses6
+libcurl4
+fontconfig
+fonts-dejavu-core
+fonts-dejavu-extra
+fonts-liberation

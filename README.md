@@ -2,7 +2,7 @@
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/larsvilhuber/jupyter-stata-colab/blob/main/stata_colab_example.ipynb)
 
-A minimal example of running Stata from a Jupyter notebook on [Google Colab](https://colab.research.google.com/).
+A minimal example of running Stata from a Jupyter notebook on [Google Colab](https://colab.research.google.com/) or [repo2docker](https://repo2docker.readthedocs.io/).
 
 - [`stata_colab_example.ipynb`](stata_colab_example.ipynb) – the example notebook.
 - [`setup_stata.py`](setup_stata.py) – helper that installs Stata, writes your license, and starts [PyStata](https://www.stata.com/python/pystata19/).
@@ -46,7 +46,21 @@ setup_stata.install_stata(version="19_5", tag="latest", edition="se")
 
 An explicit `image=` overrides the version, tag, and edition used to select the image.
 
-## Outside of Colab
+## repo2docker
+
+On an x86-64 Linux machine with Docker and `jupyter-repo2docker` installed, run:
+
+```bash
+jupyter-repo2docker https://github.com/larsvilhuber/jupyter-stata-colab
+```
+
+To build a local checkout instead, run `jupyter-repo2docker .` from the repository directory. Open `stata_colab_example.ipynb` in the resulting Jupyter session and run its cells in order. Supply your own base64-encoded license at the hidden prompt, just as on Colab.
+
+The `.binder/` configuration installs Stata's system libraries and fonts plus the Python packages used by the examples. Stata itself is downloaded when the notebook runs, into `~/usr/local/stata` for repo2docker's non-root user. No license is needed during the image build or baked into the image. Treat the running container as private: do not share it with your license installed, and remove it after use.
+
+Both environments use the **same notebook and `setup_stata.py`**, including the version, tag, edition, installation, and license handling. There are no copied repo2docker Stata settings to synchronize, so changes to the Colab setup do not require a generated configuration or synchronization pull request.
+
+## Other Linux machines
 
 The helper also works on any x86-64 Linux machine:
 
