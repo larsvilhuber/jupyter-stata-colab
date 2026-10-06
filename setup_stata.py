@@ -30,11 +30,14 @@ import shutil
 import subprocess
 import sys
 import tarfile
+import urllib.parse
 import urllib.request
 
-DEFAULT_IMAGE = "dataeditors/stata19_5-se:2026-08-12"
+DEFAULT_VERSION = "19_5"
+DEFAULT_TAG = "2026-08-12"
 DEFAULT_STATA_DIR = "/usr/local/stata"
 DEFAULT_EDITION = "se"
+DEFAULT_IMAGE = "dataeditors/stata{}-{}:{}".format(DEFAULT_VERSION, DEFAULT_EDITION, DEFAULT_TAG)
 
 REGISTRY = "https://registry-1.docker.io"
 AUTH_URL = "https://auth.docker.io/token?service=registry.docker.io&scope=repository:{repo}:pull"
@@ -56,6 +59,19 @@ def _parse_image(image):
     if "/" not in repo:
         repo = "library/" + repo
     return repo, tag or "latest"
+
+
+def get_latest_tag(repo):
+    """Return the most recently updated non-``latest`` tag on Docker Hub."""
+    url = "https://hub.docker.com/v2/repositories/{}/tags/?page_size=2&ordering=last_updated".format(
+        urllib.parse.quote(repo, safe="/")
+    )
+    with urllib.request.urlopen(url, timeout=30) as resp:
+        tags = json.load(resp)["results"]
+    for tag in tags:
+        if tag["name"] != "latest":
+            return tag["name"]
+    raise RuntimeError("No published tag found for {}".format(repo))
 
 
 def _request(url, token, accept=None):
@@ -131,9 +147,14 @@ def _extract_layer(fileobj, prefix, root):
             extracted.add(name)
 
 
-def install_stata(image=DEFAULT_IMAGE, stata_dir=DEFAULT_STATA_DIR, root="/", force=False):
+def install_stata(image=None, stata_dir=DEFAULT_STATA_DIR, root="/", force=False, *,
+                  version=DEFAULT_VERSION, tag=DEFAULT_TAG, edition=DEFAULT_EDITION):
     """Copy the Stata installation found at ``stata_dir`` inside ``image`` to ``root``.
 
+    Without ``image``, use ``dataeditors/stata{version}-{edition}:{tag}``.
+    Use Docker repository version spelling, e.g. ``19_5`` for Stata 19.5.
+    An explicit ``image`` overrides version, tag, and edition. A ``latest`` tag
+    resolves to the most recently updated published tag on Docker Hub.
     Returns the path of the installed Stata directory.
     """
     prefix = stata_dir.strip("/")
@@ -142,7 +163,11 @@ def install_stata(image=DEFAULT_IMAGE, stata_dir=DEFAULT_STATA_DIR, root="/", fo
         print("Stata already installed in {} (use force=True to reinstall).".format(target))
         return target
 
+    if image is None:
+        image = "dataeditors/stata{}-{}:{}".format(version, edition, tag)
     repo, tag = _parse_image(image)
+    if tag == "latest":
+        tag = get_latest_tag(repo)
     print("Fetching Stata from docker.io/{}:{} ...".format(repo, tag))
     token = _get_token(repo)
     layers = _get_layers(repo, tag, token)
@@ -223,7 +248,9 @@ def configure_pystata(stata_dir=DEFAULT_STATA_DIR, edition=DEFAULT_EDITION):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    parser.add_argument("--image", default=DEFAULT_IMAGE, help="Docker image to copy Stata from (default: %(default)s)")
+    parser.add_argument("--image", help="Docker image override (takes precedence over --version, --tag and --edition)")
+    parser.add_argument("--version", default=DEFAULT_VERSION, help="Stata version in Docker repository spelling, e.g. 19_5 (default: %(default)s)")
+    parser.add_argument("--tag", default=DEFAULT_TAG, help="Docker tag, or latest for the most recently updated tag (default: %(default)s)")
     parser.add_argument("--stata-dir", default=DEFAULT_STATA_DIR, help="Stata directory (default: %(default)s)")
     parser.add_argument("--root", default="/", help="Filesystem root to install into (default: %(default)s)")
     parser.add_argument("--force", action="store_true", help="Reinstall even if Stata is already present")
@@ -231,7 +258,8 @@ def main(argv=None):
     parser.add_argument("--skip-license", action="store_true", help="Do not prompt for the license")
     args = parser.parse_args(argv)
 
-    target = install_stata(args.image, args.stata_dir, args.root, args.force)
+    target = install_stata(args.image, args.stata_dir, args.root, args.force,
+                           version=args.version, tag=args.tag, edition=args.edition)
     if not args.skip_license:
         write_license(getpass.getpass("Paste your base64-encoded stata.lic (input hidden): "), target)
         check_license(target, args.edition)
