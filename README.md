@@ -5,6 +5,7 @@
 A minimal example of running Stata from a Jupyter notebook on [Google Colab](https://colab.research.google.com/) or [repo2docker](https://repo2docker.readthedocs.io/).
 
 - [`stata_colab_example.ipynb`](stata_colab_example.ipynb) – the example notebook.
+- [`stata_colab_solutions.ipynb`](stata_colab_solutions.ipynb) – the same notebook, plus the cells from part 4 of the [Reproducible Documents tutorial](https://larsvilhuber.github.io/reproducible-documents/): a printable regression table and a figure, exported to Word and PDF. [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/larsvilhuber/jupyter-stata-colab/blob/main/stata_colab_solutions.ipynb) [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/larsvilhuber/jupyter-stata-colab/HEAD?urlpath=%2Fdoc%2Ftree%2Fstata_colab_solutions.ipynb). Generated from the tutorial's [cell files](https://github.com/larsvilhuber/reproducible-documents/tree/main/examples/04-jupyter-colab) by its `tests/build-notebook.py`.
 - [`setup_stata.py`](setup_stata.py) – helper that installs Stata, writes your license, and starts [PyStata](https://www.stata.com/python/pystata19/).
 
 ## How it works
